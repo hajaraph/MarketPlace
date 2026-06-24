@@ -45,14 +45,13 @@ class AuthTestCase(TestCase):
         self.assertNotEqual(u.password, MDP)
         self.assertTrue(u.check_password(MDP))
 
-    def test_register_doublon_409(self):
+    def test_register_email_doublon_409(self):
         self._register()
-        r = self._register()
+        r = self._register(telephone="+261348888888")  # même email, autre tel
         self.assertEqual(r.status_code, 409)
         body = r.json()
         self.assertFalse(body["success"])
-        self.assertIn("error", body)
-        self.assertIn("message", body["error"])
+        self.assertIn("email", body["error"]["message"].lower())
 
     def test_register_role_personnalise(self):
         r = self._register(email="vendor@x.com", role=RoleUtilisateur.VENDEUR)
@@ -107,6 +106,7 @@ class AuthTestCase(TestCase):
         self._register()
         r = self._register(email="autre@x.com")  # même téléphone par défaut
         self.assertEqual(r.status_code, 409)
+        self.assertIn("téléphone", r.json()["error"]["message"].lower())
 
     # --- me ---------------------------------------------------------------
 
