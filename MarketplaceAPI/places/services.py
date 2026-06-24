@@ -27,6 +27,11 @@ def _exiger_admin(user) -> None:
         raise HttpError(403, "Action réservée aux administrateurs.")
 
 
+def _exiger_vendeur(user) -> None:
+    if not (user.role == RoleUtilisateur.VENDEUR or _est_admin(user)):
+        raise HttpError(403, "Seul un vendeur peut créer un emplacement.")
+
+
 def _get_vivant(model: type[Model], pk: int):
     obj = model.objects.vivants().filter(pk=pk).first()
     if obj is None:
@@ -59,6 +64,7 @@ def get_magasin(magasin_id: int) -> Magasin:
 
 
 def creer_magasin(*, proprietaire, data: dict) -> Magasin:
+    _exiger_vendeur(proprietaire)
     centre = _resoudre_centre(data.pop("centre_commercial_id", None))
     return Magasin.objects.create(proprietaire=proprietaire, centre_commercial=centre, **data)
 
@@ -94,7 +100,7 @@ def get_centre(centre_id: int) -> CentreCommercial:
 
 
 def creer_centre(*, user, data: dict) -> CentreCommercial:
-    _exiger_admin(user)
+    _exiger_vendeur(user)
     return CentreCommercial.objects.create(**data)
 
 

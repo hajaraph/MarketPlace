@@ -24,6 +24,10 @@ class PlacesTestCase(TestCase):
             email="a@x.com", password=MDP, nom="A", prenom="A",
             telephone="+261340000003", role=RoleUtilisateur.ADMIN,
         )
+        self.client_user = Utilisateur.objects.create_user(
+            email="c@x.com", password=MDP, nom="C", prenom="C",
+            telephone="+261340000004", role=RoleUtilisateur.CLIENT,
+        )
 
     def _token(self, user):
         from ninja_jwt.tokens import RefreshToken
@@ -49,6 +53,10 @@ class PlacesTestCase(TestCase):
     def test_creer_magasin_non_authentifie_401(self):
         r = self.client.post("/places/magasins", json={"nom": "X"})
         self.assertEqual(r.status_code, 401)
+
+    def test_creer_magasin_par_client_403(self):
+        r = self._creer_magasin(self.client_user)
+        self.assertEqual(r.status_code, 403)
 
     def test_lister_magasins_public(self):
         self._creer_magasin(self.vendeur)
@@ -96,15 +104,15 @@ class PlacesTestCase(TestCase):
 
     # --- centres commerciaux --------------------------------------------
 
-    def test_creer_centre_admin_ok(self):
+    def test_creer_centre_par_vendeur_ok(self):
         r = self.client.post("/places/centres", json={"nom": "Mall", "nombre_etages": 3},
-                            headers=self._auth(self.admin))
+                            headers=self._auth(self.vendeur))
         self.assertEqual(r.status_code, 201)
         self.assertEqual(r.json()["data"]["nombre_etages"], 3)
 
-    def test_creer_centre_non_admin_403(self):
+    def test_creer_centre_par_client_403(self):
         r = self.client.post("/places/centres", json={"nom": "Mall"},
-                            headers=self._auth(self.vendeur))
+                            headers=self._auth(self.client_user))
         self.assertEqual(r.status_code, 403)
 
     def test_magasin_dans_centre(self):

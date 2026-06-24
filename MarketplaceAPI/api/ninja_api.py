@@ -9,7 +9,7 @@ Pour ajouter une nouvelle fonctionnalité (products, orders, ...):
 """
 from ninja import NinjaAPI
 
-from api.routers import auth, health, places
+from api.routers import auth, catalog, health, places
 from shared.api_response import register_exception_handlers
 
 api = NinjaAPI(
@@ -25,3 +25,4 @@ register_exception_handlers(api)
 api.add_router("/", health.router)
 api.add_router("/auth", auth.router)
 api.add_router("/places", places.router)
+api.add_router("/catalog", catalog.router)
