@@ -59,7 +59,7 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     email = models.EmailField("Adresse e-mail", unique=True)
     nom = models.CharField("Nom", max_length=150)
     prenom = models.CharField("Prénom", max_length=150)
-    telephone = models.CharField("Téléphone", max_length=20, blank=True, default="")
+    telephone = models.CharField("Téléphone", max_length=20, unique=True)
 
     # --- Avatar (URL ou chemin, on gérera l'upload plus tard) ---
     photo_profil = models.URLField("Photo de profil", blank=True, default="")
@@ -80,8 +80,8 @@ class Utilisateur(AbstractBaseUser, PermissionsMixin, SoftDeleteModel):
     #     date_suppression hérités de SoftDeleteModel) ---
 
     # --- Authentification ---
-    USERNAME_FIELD = "email"  # on se connecte avec l'email
-    REQUIRED_FIELDS = ["nom", "prenom"]  # demandés par createsuperuser
+    USERNAME_FIELD = "email"  # identifiant principal Django (login email OU tel géré au service)
+    REQUIRED_FIELDS = ["nom", "prenom", "telephone"]  # demandés par createsuperuser
 
     objects = UtilisateurManager()
 

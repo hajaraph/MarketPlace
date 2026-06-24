@@ -25,6 +25,12 @@ def _emettre_tokens(utilisateur: Utilisateur) -> dict[str, str]:
 def register(*, email: str, password: str, nom: str, prenom: str,
              telephone: str = "", role: str | None = None) -> dict:
     """Crée un compte puis renvoie l'utilisateur + ses tokens. Fail-fast sur doublon."""
+    # Pré-contrôle pour un message ciblé par champ (meilleure UX qu'un 409 générique).
+    if Utilisateur.objects.filter(email=email).exists():
+        raise HttpError(409, "Un compte existe déjà avec cet email.")
+    if Utilisateur.objects.filter(telephone=telephone).exists():
+        raise HttpError(409, "Un compte existe déjà avec ce téléphone.")
+
     extra = {"nom": nom, "prenom": prenom, "telephone": telephone}
     if role is not None:
         extra["role"] = role
@@ -33,13 +39,27 @@ def register(*, email: str, password: str, nom: str, prenom: str,
             email=email, password=password, **extra
         )
     except IntegrityError:
-        raise HttpError(409, "Un compte existe déjà avec cet email.")
+        # Filet de sécurité en cas de course (deux inscriptions simultanées).
+        raise HttpError(409, "Un compte existe déjà avec cet email ou ce téléphone.")
 
     return {"user": utilisateur, **_emettre_tokens(utilisateur)}
 
 
-def login(*, email: str, password: str) -> dict:
-    """Authentifie par email/mot de passe. 401 si invalide."""
+def login(*, identifiant: str, password: str) -> dict:
+    """
+    Authentifie par email OU téléphone + mot de passe. 401 si invalide.
+
+    L'identifiant est traité comme un email s'il contient '@', sinon comme un
+    téléphone : on résout alors l'email correspondant avant de déléguer à
+    `authenticate` (qui reste basé sur USERNAME_FIELD = email).
+    """
+    email = identifiant
+    if "@" not in identifiant:
+        compte = Utilisateur.objects.filter(telephone=identifiant).first()
+        if compte is None:
+            raise HttpError(401, "Identifiants invalides.")
+        email = compte.email
+
     utilisateur = authenticate(username=email, password=password)
     if utilisateur is None:
         raise HttpError(401, "Identifiants invalides.")

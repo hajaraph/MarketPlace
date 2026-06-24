@@ -17,8 +17,9 @@ class AuthTestCase(TestCase):
     def setUp(self):
         self.client = TestClient(api)
 
-    def _register(self, email="alice@x.com", **extra):
-        payload = {"email": email, "password": MDP, "nom": "A", "prenom": "B", **extra}
+    def _register(self, email="alice@x.com", telephone="+261340000001", **extra):
+        payload = {"email": email, "password": MDP, "nom": "A", "prenom": "B",
+                   "telephone": telephone, **extra}
         return self.client.post("/auth/register", json=payload)
 
     def _auth_header(self, access):
@@ -60,30 +61,52 @@ class AuthTestCase(TestCase):
 
     # --- login ------------------------------------------------------------
 
-    def test_login_ok(self):
+    def test_login_par_email_ok(self):
         self._register()
-        r = self.client.post("/auth/login", json={"email": "alice@x.com", "password": MDP})
+        r = self.client.post("/auth/login", json={"identifiant": "alice@x.com", "password": MDP})
         self.assertEqual(r.status_code, 200)
         self.assertTrue(r.json()["success"])
         self.assertIn("access", r.json()["data"])
 
+    def test_login_par_telephone_ok(self):
+        self._register(telephone="+261349999999")
+        r = self.client.post("/auth/login", json={"identifiant": "+261349999999", "password": MDP})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["data"]["user"]["email"], "alice@x.com")
+
     def test_login_mauvais_mdp_401(self):
         self._register()
-        r = self.client.post("/auth/login", json={"email": "alice@x.com", "password": "x"})
+        r = self.client.post("/auth/login", json={"identifiant": "alice@x.com", "password": "x"})
         self.assertEqual(r.status_code, 401)
         body = r.json()
         self.assertFalse(body["success"])
         self.assertIn("message", body["error"])
 
     def test_login_inconnu_401(self):
-        r = self.client.post("/auth/login", json={"email": "nobody@x.com", "password": MDP})
+        r = self.client.post("/auth/login", json={"identifiant": "nobody@x.com", "password": MDP})
+        self.assertEqual(r.status_code, 401)
+
+    def test_login_telephone_inconnu_401(self):
+        r = self.client.post("/auth/login", json={"identifiant": "+261340000000", "password": MDP})
         self.assertEqual(r.status_code, 401)
 
     def test_login_compte_inactif_401(self):
         self._register()
         Utilisateur.objects.filter(email="alice@x.com").update(is_active=False)
-        r = self.client.post("/auth/login", json={"email": "alice@x.com", "password": MDP})
+        r = self.client.post("/auth/login", json={"identifiant": "alice@x.com", "password": MDP})
         self.assertEqual(r.status_code, 401)
+
+    def test_register_sans_telephone_422(self):
+        r = self.client.post(
+            "/auth/register",
+            json={"email": "no_phone@x.com", "password": MDP, "nom": "A", "prenom": "B"},
+        )
+        self.assertEqual(r.status_code, 422)
+
+    def test_register_telephone_doublon_409(self):
+        self._register()
+        r = self._register(email="autre@x.com")  # même téléphone par défaut
+        self.assertEqual(r.status_code, 409)
 
     # --- me ---------------------------------------------------------------
 

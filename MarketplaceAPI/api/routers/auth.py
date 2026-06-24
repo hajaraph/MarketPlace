@@ -40,7 +40,7 @@ def register(request, payload: RegisterIn):
 
 @router.post("/login", response={200: Envelope}, auth=None)
 def login(request, payload: LoginIn):
-    res = services.login(email=payload.email, password=payload.password)
+    res = services.login(identifiant=payload.identifiant, password=payload.password)
     data = AuthResponseOut(
         user=UserOut.from_orm(res["user"]),
         access=res["access"],

@@ -22,13 +22,13 @@ class RegisterIn(Schema):
     password: str
     nom: str
     prenom: str
-    telephone: str = ""
+    telephone: str
     role: RoleUtilisateur = RoleUtilisateur.CLIENT
 
 
 class LoginIn(Schema):
-    """Payload de connexion."""
-    email: str
+    """Payload de connexion : identifiant = email OU téléphone."""
+    identifiant: str
     password: str
 
 
