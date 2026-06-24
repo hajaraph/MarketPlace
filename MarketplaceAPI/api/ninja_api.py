@@ -10,12 +10,16 @@ Pour ajouter une nouvelle fonctionnalité (products, orders, ...):
 from ninja import NinjaAPI
 
 from api.routers import auth, health
+from shared.api_response import register_exception_handlers
 
 api = NinjaAPI(
     title="Marketplace Maps API",
     version="1.0.0",
     description="API REST de la marketplace cartographique.",
 )
+
+# --- Enveloppe standardisée des erreurs (HttpError, validation, 500) ---
+register_exception_handlers(api)
 
 # --- Enregistrement des routers ---
 api.add_router("/", health.router)

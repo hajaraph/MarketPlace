@@ -1,8 +1,11 @@
 """
 Router d'authentification — mince, délègue aux use cases (users.services).
 
+Réponses enveloppées via shared.api_response.ApiResponse :
+    { success, timestamp, data, message?, error?, meta? }
+
 Routes :
-  POST /api/auth/register  → création de compte
+  POST /api/auth/register  → création de compte (201)
   POST /api/auth/login     → connexion
   POST /api/auth/refresh   → rafraîchissement de token
   GET  /api/auth/me        → profil de l'utilisateur connecté (JWT requis)
@@ -10,6 +13,7 @@ Routes :
 from ninja import Router
 from ninja_jwt.authentication import JWTAuth
 
+from shared.api_response import ApiResponse, Envelope
 from users import services
 from users.schemas import (
     AuthResponseOut,
@@ -23,21 +27,35 @@ from users.schemas import (
 router = Router(tags=["auth"])
 
 
-@router.post("/register", response=AuthResponseOut, auth=None)
+@router.post("/register", response={201: Envelope}, auth=None)
 def register(request, payload: RegisterIn):
-    return services.register(**payload.dict())
+    res = services.register(**payload.dict())
+    data = AuthResponseOut(
+        user=UserOut.from_orm(res["user"]),
+        access=res["access"],
+        refresh=res["refresh"],
+    )
+    return ApiResponse.created(data=data, message="Compte créé avec succès.")
 
 
-@router.post("/login", response=AuthResponseOut, auth=None)
+@router.post("/login", response={200: Envelope}, auth=None)
 def login(request, payload: LoginIn):
-    return services.login(email=payload.email, password=payload.password)
+    res = services.login(email=payload.email, password=payload.password)
+    data = AuthResponseOut(
+        user=UserOut.from_orm(res["user"]),
+        access=res["access"],
+        refresh=res["refresh"],
+    )
+    return ApiResponse.success(data=data, message="Connexion réussie.")
 
 
-@router.post("/refresh", response=TokenOut, auth=None)
+@router.post("/refresh", response={200: Envelope}, auth=None)
 def refresh(request, payload: RefreshIn):
-    return services.refresh(refresh_token=payload.refresh)
+    res = services.refresh(refresh_token=payload.refresh)
+    data = TokenOut(access=res["access"], refresh=res["refresh"])
+    return ApiResponse.success(data=data)
 
 
-@router.get("/me", response=UserOut, auth=JWTAuth())
+@router.get("/me", response={200: Envelope}, auth=JWTAuth())
 def me(request):
-    return request.auth
+    return ApiResponse.success(data=UserOut.from_orm(request.auth))
