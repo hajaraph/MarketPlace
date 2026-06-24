@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramme de Classes - Marketplace Maps (cohérent)</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+        }
+        h1 {
+            color: #e94560;
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #0f3460;
+            background: #e94560;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            background: #fff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(233, 69, 96, 0.3);
+            max-width: 1400px;
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+        .legend {
+            margin-top: 30px;
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px 30px;
+            max-width: 1400px;
+            width: 100%;
+        }
+        .legend h3 { color: #e94560; margin-top: 0; }
+        .legend ul { list-style: none; padding: 0; }
+        .legend li { margin: 8px 0; font-size: 14px; }
+        .legend code {
+            background: #0f3460;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #00d2ff;
+        }
+        .legend .section-title {
+            color: #e94560;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+        .legend .fix {
+            color: #4ade80;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Marketplace Maps</h1>
+<h2>Diagramme de Classes UML · Version corrigée & cohérente</h2>
+
+<pre class="mermaid">
+classDiagram
+    direction TB
+
+    %% ==========================================
+    %% OBJET-VALEUR : Position géographique (composition partout)
+    %% ==========================================
+    class PointGPS {
+        +Double latitude
+        +Double longitude
+        +calculerDistance(PointGPS) Double
+    }
+
+    %% ==========================================
+    %% UTILISATEURS & RÔLES
+    %% ==========================================
+    class Utilisateur {
+        +Long id
+        +String nom
+        +String prenom
+        +String email
+        +String motDePasse
+        +String telephone
+        +String photoProfil
+        +RoleUtilisateur role
+        +Boolean estActif
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+        +sInscrire() void
+        +seConnecter() void
+        +modifierProfil() void
+        +supprimerCompte() void
+    }
+
+    class RoleUtilisateur {
+        &lt;&lt;enumeration&gt;&gt;
+        CLIENT
+        VENDEUR
+        LIVREUR
+        ADMIN
+    }
+
+    class Livreur {
+        +Long id
+        +String typeVehicule
+        +PointGPS position
+        +Boolean estDisponible
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +mettreAJourPosition() void
+    }
+
+    %% ==========================================
+    %% EMPLACEMENTS (héritage nettoyé : pas de duplication de champs)
+    %% ==========================================
+    class EmplacementMarche {
+        &lt;&lt;abstract&gt;&gt;
+        +Long id
+        +String nom
+        +String description
+        +String banniere
+        +PointGPS localisation
+        +String adresse
+        +String horairesOuverture
+        +Boolean estOuvert
+        +Boolean estValide
+        +DateTime dateValidation
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+    }
+
+    class Magasin {
+        +CategorieMagasin categorie
+        +String etage
+        +String numeroLocal
+        +creerMagasin() void
+        +modifierMagasin() void
+        +supprimerMagasin() void
+    }
+
+    class CategorieMagasin {
+        &lt;&lt;enumeration&gt;&gt;
+        ALIMENTATION
+        VETEMENTS
+        ELECTRONIQUE
+        RESTAURANT
+        PHARMACIE
+        ARTISANAT
+        BEAUTE
+        MAISON
+        AUTRE
+    }
+
+    class CentreCommercial {
+        +Integer nombreEtages
+        +Boolean parkingDisponible
+        +ajouterMagasin() void
+        +listerMagasins() List
+    }
+
+    %% ==========================================
+    %% PRODUITS & MÉDIAS
+    %% ==========================================
+    class Produit {
+        +Long id
+        +String nom
+        +String description
+        +CategorieProduit categorie
+        +Double prixMGA
+        +Boolean estActif
+        +EtatStock etatStock
+        +Integer quantite
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+        +ajouterProduit() void
+        +modifierProduit() void
+        +supprimerProduit() void
+        +estDisponible() Boolean
+    }
+
+    class CategorieProduit {
+        &lt;&lt;enumeration&gt;&gt;
+        ALIMENTATION
+        VETEMENTS
+        ELECTRONIQUE
+        ARTISANAT
+        BEAUTE
+        MAISON
+        AUTRE
+    }
+
+    class EtatStock {
+        &lt;&lt;enumeration&gt;&gt;
+        EN_STOCK
+        STOCK_FAIBLE
+        RUPTURE_STOCK
+    }
+
+    class MediaProduit {
+        +Long id
+        +String urlPhoto
+        +String legende
+        +Integer ordre
+        +DateTime dateCreation
+        +Boolean estSupprime
+        +DateTime dateSuppression
+    }
+
+    %% ==========================================
+    %% COMMANDES (avec snapshot adresse + produit)
+    %% ==========================================
+    class Commande {
+        +Long id
+        +DateTime dateCommande
+        +StatutCommande statut
+        +Double totalMGA
+        +String adresseLivraisonSnapshot
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+        +passerCommande() void
+        +annulerCommande() void
+        +calculerTotal() Double
+    }
+
+    class LigneCommande {
+        +Long id
+        +Integer quantite
+        +Double prixUnitaireMGA
+        +String nomProduitSnapshot
+        +DateTime dateCreation
+        +calculerSousTotal() Double
+    }
+
+    class StatutCommande {
+        &lt;&lt;enumeration&gt;&gt;
+        EN_ATTENTE
+        CONFIRMEE
+        PREPARATION
+        LIVRAISON_EN_COURS
+        LIVREE
+        ANNULEE
+    }
+
+    class AdresseLivraison {
+        +Long id
+        +String adresseComplete
+        +String ville
+        +String quartier
+        +String codePostal
+        +String complement
+        +PointGPS coordonnees
+        +String telephone
+        +Boolean estParDefaut
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+    }
+
+    class HistoriqueVente {
+        +Long id
+        +DateTime dateVente
+        +Double montantTotalMGA
+        +Integer quantiteVendue
+        +String nomProduit
+        +Double prixUnitaireMGA
+        +String nomMagasin
+        +String nomClient
+        +String referenceCommande
+        +DateTime dateCreation
+    }
+
+    %% ==========================================
+    %% PAIEMENT (1 commande -> plusieurs tentatives)
+    %% ==========================================
+    class Paiement {
+        +Long id
+        +Double montantMGA
+        +MethodePaiement methode
+        +StatutPaiement statut
+        +String referenceTransaction
+        +DateTime datePaiement
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+        +traiterPaiement() void
+        +rembourser() void
+    }
+
+    class MethodePaiement {
+        &lt;&lt;enumeration&gt;&gt;
+        MOBILE_MONEY
+        ESPECES
+        CARTE_BANCAIRE
+    }
+
+    class StatutPaiement {
+        &lt;&lt;enumeration&gt;&gt;
+        EN_ATTENTE
+        VALIDE
+        ECHOUE
+        REMBOURSE
+    }
+
+    %% ==========================================
+    %% AVIS (éclatés par cible -> intégrité référentielle)
+    %% ==========================================
+    class AvisMagasin {
+        +Long id
+        +Integer note
+        +String commentaire
+        +DateTime dateCreation
+        +Boolean estSignale
+        +publierAvis() void
+        +signalerAvis() void
+    }
+
+    class AvisProduit {
+        +Long id
+        +Integer note
+        +String commentaire
+        +DateTime dateCreation
+        +Boolean estSignale
+        +publierAvis() void
+        +signalerAvis() void
+    }
+
+    %% ==========================================
+    %% NOTIFICATIONS
+    %% ==========================================
+    class Notification {
+        +Long id
+        +String titre
+        +String message
+        +TypeNotification type
+        +Boolean estLu
+        +DateTime dateEnvoi
+        +DateTime dateCreation
+        +marquerCommeLu() void
+    }
+
+    class TypeNotification {
+        &lt;&lt;enumeration&gt;&gt;
+        COMMANDE
+        PROMOTION
+        LIVRAISON
+        SYSTEME
+        ADMIN
+    }
+
+    %% ==========================================
+    %% FAVORIS (éclatés par cible)
+    %% ==========================================
+    class FavoriMagasin {
+        +Long id
+        +DateTime dateAjout
+    }
+
+    class FavoriProduit {
+        +Long id
+        +DateTime dateAjout
+    }
+
+    %% ==========================================
+    %% PANIER (prix live depuis le Produit, snapshot à la commande)
+    %% ==========================================
+    class Panier {
+        +Long id
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +viderPanier() void
+        +calculerTotal() Double
+    }
+
+    class LignePanier {
+        +Long id
+        +Integer quantite
+        +DateTime dateAjout
+        +modifierQuantite() void
+    }
+
+    %% ==========================================
+    %% PROMOTIONS
+    %% ==========================================
+    class Promotion {
+        +Long id
+        +String codePromo
+        +String description
+        +Double pourcentageReduction
+        +Double montantReductionMGA
+        +DateTime dateDebut
+        +DateTime dateFin
+        +Boolean estActive
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+        +Boolean estSupprime
+        +DateTime dateSuppression
+        +estValide() Boolean
+        +calculerPrixReduit() Double
+    }
+
+    %% ==========================================
+    %% LIVRAISON & SUIVI GPS
+    %% ==========================================
+    class Livraison {
+        +Long id
+        +StatutLivraison statut
+        +DateTime dateEstimee
+        +DateTime dateEffective
+        +DateTime dateCreation
+        +DateTime dateMiseAJour
+    }
+
+    class StatutLivraison {
+        &lt;&lt;enumeration&gt;&gt;
+        PRISE_EN_CHARGE
+        EN_ROUTE
+        LIVREE
+        ECHOUEE
+    }
+
+    class SuiviLivraison {
+        +Long id
+        +PointGPS position
+        +DateTime horodatage
+        +String commentaire
+    }
+
+    %% ==========================================
+    %% CONVERSATION / CHAT
+    %% ==========================================
+    %% ==========================================
+    %% ADMINISTRATION (FK concrètes -> intégrité référentielle)
+    %% ==========================================
+    class Signalement {
+        +Long id
+        +TypeSignalement type
+        +String raison
+        +StatutSignalement statut
+        +DateTime dateCreation
+        +DateTime dateTraitement
+        +String commentaireResolution
+        +creerSignalement() void
+        +traiterSignalement() void
+    }
+
+    class TypeSignalement {
+        &lt;&lt;enumeration&gt;&gt;
+        AVIS_MAGASIN
+        AVIS_PRODUIT
+        PRODUIT
+        MAGASIN
+        UTILISATEUR
+    }
+
+    class StatutSignalement {
+        &lt;&lt;enumeration&gt;&gt;
+        EN_ATTENTE
+        EN_COURS
+        RESOLU
+        REJETE
+    }
+
+    class ActionAdministrateur {
+        +Long id
+        +String description
+        +TypeActionAdmin type
+        +TypeCibleAdmin typeCible
+        +Long idCible
+        +DateTime dateAction
+        +effectuerAction() void
+    }
+
+    class TypeActionAdmin {
+        &lt;&lt;enumeration&gt;&gt;
+        VALIDATION_MAGASIN
+        SUSPENSION_COMPTE
+        SUPPRESSION_AVIS
+        MODIFICATION_CATEGORIE
+        GESTION_PROMOTION
+        RESOLUTION_LITIGE
+    }
+
+    class TypeCibleAdmin {
+        &lt;&lt;enumeration&gt;&gt;
+        UTILISATEUR
+        MAGASIN
+        AVIS
+        PRODUIT
+        PROMOTION
+        CENTRE_COMMERCIAL
+    }
+
+    %% ==========================================
+    %% RELATIONS
+    %% ==========================================
+
+    %% --- Héritage & emplacements ---
+    EmplacementMarche <|-- Magasin : herite
+    EmplacementMarche <|-- CentreCommercial : herite
+    EmplacementMarche "1" --> "1" PointGPS : localisation
+    EmplacementMarche "0..1" --> "1" Utilisateur : validePar
+    CentreCommercial "1" --> "1..*" Magasin : contient
+    Magasin "0..1" --> "1" CentreCommercial : appartient a
+    Magasin "1" --> "1" CategorieMagasin : categorie
+
+    %% --- Utilisateurs ---
+    Utilisateur "1" --> "1" RoleUtilisateur : role
+    Utilisateur "1" --> "*" Magasin : possede
+    Livreur "1" --> "1" Utilisateur : compte associe
+    Livreur "1" --> "1" PointGPS : position
+
+    %% --- Produits & médias ---
+    Magasin "1" --> "*" Produit : catalogue
+    Produit "1" --> "1" CategorieProduit : categorie
+    Produit "1" --> "1" EtatStock : etat
+    Produit "1" --> "*" MediaProduit : galerie photos
+
+    %% --- Adresses ---
+    Utilisateur "1" --> "*" AdresseLivraison : a des adresses
+    AdresseLivraison "1" --> "1" PointGPS : coordonnees
+
+    %% --- Commandes ---
+    Utilisateur "1" --> "*" Commande : passe
+    Commande "1" --> "0..1" AdresseLivraison : adresse source snapshotée
+    Commande "1" --> "1..*" LigneCommande : comprend
+    LigneCommande "*" --> "1" Produit : reference
+    Commande "1" --> "1" StatutCommande : statut
+    Commande "1" --> "*" HistoriqueVente : genere
+    HistoriqueVente "*" --> "1" Magasin : vendu par
+    HistoriqueVente "*" --> "1" Produit : concerne
+    HistoriqueVente "*" --> "1" Utilisateur : acheteur
+
+    %% --- Paiement (1 -> plusieurs tentatives) ---
+    Commande "1" --> "0..*" Paiement : tentatives
+    Paiement "1" --> "1" MethodePaiement : methode
+    Paiement "1" --> "1" StatutPaiement : statut
+
+    %% --- Avis (FK réelles par cible) ---
+    Utilisateur "1" --> "*" AvisMagasin : redige
+    Utilisateur "1" --> "*" AvisProduit : redige
+    AvisMagasin "*" --> "1" Magasin : evalue
+    AvisProduit "*" --> "1" Produit : evalue
+
+    %% --- Notifications ---
+    Utilisateur "1" --> "*" Notification : recoit
+    Notification "1" --> "1" TypeNotification : type
+
+    %% --- Favoris (FK réelles par cible) ---
+    Utilisateur "1" --> "*" FavoriMagasin : sauvegarde
+    Utilisateur "1" --> "*" FavoriProduit : sauvegarde
+    FavoriMagasin "*" --> "1" Magasin : cible
+    FavoriProduit "*" --> "1" Produit : cible
+
+    %% --- Panier ---
+    Utilisateur "1" --> "1" Panier : possede
+    Panier "1" --> "*" LignePanier : contient
+    LignePanier "*" --> "1" Produit : reference
+
+    %% --- Promotions ---
+    Magasin "1" --> "*" Promotion : cree
+    Promotion "1" --> "1..*" Produit : appliquee a
+
+    %% --- Livraison ---
+    Commande "1" --> "0..1" Livraison : livree via
+    Livraison "1" --> "1" StatutLivraison : statut
+    Livraison "1" --> "1" Livreur : assuree par
+    Livraison "1" --> "*" SuiviLivraison : tracee par
+    SuiviLivraison "1" --> "1" PointGPS : position
+
+    %% --- Administration ---
+    Utilisateur "1" --> "*" Signalement : emet
+    Signalement "1" --> "1" TypeSignalement : type
+    Signalement "1" --> "1" StatutSignalement : statut
+    Signalement "0..1" --> "1" Utilisateur : traitePar
+    Signalement "0..1" --> "1" AvisMagasin : cible
+    Signalement "0..1" --> "1" AvisProduit : cible
+    Signalement "0..1" --> "1" Produit : cible
+    Signalement "0..1" --> "1" Magasin : cible
+    Signalement "0..1" --> "1" Utilisateur : cible
+
+    ActionAdministrateur "1" --> "1" TypeActionAdmin : type
+    ActionAdministrateur "1" --> "1" TypeCibleAdmin : cible
+    Utilisateur "1" --> "*" ActionAdministrateur : effectue
+</pre>
+
+<div class="legend">
+    <h3>Légende &amp; corrections apportées</h3>
+
+    <div class="section-title fix">Corrections de cohérence</div>
+    <ul>
+        <li><code>EmplacementMarche</code> (abstrait) factorise désormais tous les champs communs ; <code>Magasin</code> et <code>CentreCommercial</code> ne redéfinissent que leurs attributs spécifiques.</li>
+        <li><code>TypeEmplacement</code> supprimé : redondant avec l'héritage (le type se déduit de la sous-classe).</li>
+        <li><code>PointGPS</code> utilisé partout par composition (<code>EmplacementMarche.localisation</code>, <code>AdresseLivraison.coordonnees</code>, <code>Livreur.position</code>, <code>SuiviLivraison.position</code>) — plus de latitude/longitude dupliquées.</li>
+        <li><code>Favori</code> éclaté en <code>FavoriMagasin</code> + <code>FavoriProduit</code> : vraies FK, intégrité référentielle garantie. <code>TypeFavori</code> supprimé.</li>
+        <li><code>Avis</code> éclaté en <code>AvisMagasin</code> + <code>AvisProduit</code> : même logique.</li>
+        <li><code>Signalement</code> : l'<code>idElementSignale</code> générique remplacé par des FK concrètes et optionnelles par cible.</li>
+        <li><code>Paiement</code> passé en <code>Commande 1 → 0..* Paiement</code> pour conserver l'historique des tentatives (échec puis succès).</li>
+        <li><code>Livreur</code> rattaché à un <code>Utilisateur</code> (compte) + rôle <code>LIVREUR</code> ajouté à <code>RoleUtilisateur</code>.</li>
+        <li><code>Commande.adresseLivraisonSnapshot</code> : l'adresse est figée à la validation (l'adresse source peut ensuite être modifiée/supprimée sans impacter la commande).</li>
+        <li><code>LigneCommande.nomProduitSnapshot</code> ajouté pour la même raison (snapshot du nom).</li>
+        <li><code>MediaProduit</code> : soft-delete ajouté pour rester cohérent avec les autres entités.</li>
+    </ul>
+
+    <div class="section-title">Objet-valeur <code>PointGPS</code></div>
+    <ul>
+        <li>Type composé réutilisé ; en Django l'équivalent technique serait un <code>PointField</code> (django-contrib-gis) plutôt que deux <code>FloatField</code>.</li>
+    </ul>
+
+    <div class="section-title">Relations</div>
+    <ul>
+        <li><code>1 --> *</code> Un vers plusieurs · <code>1 --> 0..1</code> Un vers zéro ou un · <code>1 --> 1..*</code> Un vers un ou plusieurs</li>
+        <li><code>&lt;&lt;enumeration&gt;&gt;</code> Type énuméré · <code>MGA</code> Ariary malgache (devise)</li>
+    </ul>
+
+    <div class="section-title">Architecture de la carte</div>
+    <ul>
+        <li><code>EmplacementMarche</code> (abstrait) = un point sur la carte (Magasin indépendant ou Centre Commercial).</li>
+        <li><code>CentreCommercial</code> contient plusieurs <code>Magasin</code> ; chaque Magasin peut appartenir à un Centre Commercial.</li>
+        <li><code>estOuvert</code> est <em>déduit</em> de <code>horairesOuverture</code> (attribut calculé, pas stocké manuellement).</li>
+    </ul>
+
+    <div class="section-title">Paiement &amp; Avis</div>
+    <ul>
+        <li><code>Paiement</code> : plusieurs tentatives possibles par commande (EN_ATTENTE, VALIDE, ECHOUE, REMBOURSE).</li>
+        <li><code>AvisMagasin</code> / <code>AvisProduit</code> : note 1-5 + commentaire, FK réelle vers la cible.</li>
+    </ul>
+
+    <div class="section-title">Panier vs Commande</div>
+    <ul>
+        <li><code>Panier</code> = transitoire, prix <strong>live</strong> depuis le <code>Produit</code> (pas de snapshot).</li>
+        <li><code>Commande</code> = figée : <code>LigneCommande.prixUnitaireMGA</code> + <code>nomProduitSnapshot</code>, adresse snapshotée.</li>
+    </ul>
+
+    <div class="section-title">Livraison</div>
+    <ul>
+        <li><code>Livraison</code> attachée à une commande, statut (PRISE_EN_CHARGE, EN_ROUTE, LIVREE, ECHOUEE).</li>
+        <li><code>Livreur</code> = <code>Utilisateur</code> de rôle <code>LIVREUR</code>, position GPS temps réel.</li>
+        <li><code>SuiviLivraison</code> : points GPS horodatés pour la carte.</li>
+    </ul>
+
+    <div class="section-title">Administration &amp; traçabilité</div>
+    <ul>
+        <li><code>RoleUtilisateur.ADMIN</code> : droits étendus.</li>
+        <li><code>Signalement</code> : remontée de contenu (avis, produit, magasin, utilisateur) avec FK concrètes vers la cible.</li>
+        <li><code>ActionAdministrateur</code> : <em>journal d'audit</em> append-only ; la référence cible (<code>idCible</code> + <code>TypeCibleAdmin</code>) est volontairement <strong>souple</strong> car le journal doit survivre à la suppression de l'entité concernée (pas de cascade, pas de FK dure).</li>
+        <li><code>HistoriqueVente</code> : snapshot reporting, conserve les données même après modification/suppression des sources.</li>
+        <li>Traçabilité commune : <code>dateCreation</code>, <code>dateMiseAJour</code>, <code>estSupprime</code>, <code>dateSuppression</code>.</li>
+    </ul>
+</div>
+
+<script>
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+
+</body>
+</html>

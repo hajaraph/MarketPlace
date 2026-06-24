@@ -1,0 +1,63 @@
+# ==========================================
+# Python / Django
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+env.bak/
+venv.bak/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.env
+
+# Django specific
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+local_settings.py
+
+# Test & coverage
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.pytest_cache/
+.mypy_cache/
+
+# ==========================================
+# Editor / IDE
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ==========================================
+# MarketplaceAPI (backend)
+# ==========================================
+MarketplaceAPI/venv/
+MarketplaceAPI/.venv/
+MarketplaceAPI/__pycache__/
+MarketplaceAPI/**/__pycache__/
+MarketplaceAPI/db.sqlite3
+MarketplaceAPI/media/
+MarketplaceAPI/staticfiles/
