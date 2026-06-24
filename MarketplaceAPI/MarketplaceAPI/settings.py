@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     # --- Apps locales ---
     'shared',
     'users',
+    'places',
     # --- JWT ---
     'ninja_jwt',
     'ninja_jwt.token_blacklist',
