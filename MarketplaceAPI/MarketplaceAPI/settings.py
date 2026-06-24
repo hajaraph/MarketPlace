@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'users',
     'places',
     'catalog',
+    'cart',
     # --- JWT ---
     'ninja_jwt',
     'ninja_jwt.token_blacklist',

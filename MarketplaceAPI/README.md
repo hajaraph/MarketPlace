@@ -20,18 +20,19 @@ MarketplaceAPI/
 │   ├── ninja_api.py         # Instance NinjaAPI — enregistrement des routers
 │   └── routers/
 │       ├── health.py        # GET /api/health
-│       └── auth.py          # /api/auth/* (register, login, refresh, me)
+│       ├── auth.py          # /api/auth/*    (register, login, refresh, me)
+│       ├── places.py        # /api/places/*  (magasins, centres commerciaux)
+│       └── catalog.py       # /api/catalog/* (produits, médias)
 │
-├── shared/                  # ★ Noyau partagé (mixins réutilisables)
+├── shared/                  # ★ Noyau partagé (mixins + enveloppe API)
 │   ├── models.py            # TimeStampedModel, SoftDeleteModel, SoftDeleteQuerySet
-│   └── gps.py               # CoordonneesMixin (latitude/longitude)
+│   ├── gps.py               # CoordonneesMixin (latitude/longitude)
+│   └── api_response.py      # Envelope + ApiResponse + handlers d'erreur globaux
 │
-├── users/                   # App Django : Utilisateurs
-│   ├── models.py            # Utilisateur (AbstractBaseUser) + RoleUtilisateur
-│   ├── services.py          # Use cases : register / login / refresh
-│   ├── schemas.py           # Schémas Pydantic In/Out
-│   ├── admin.py             # Admin Django custom
-│   └── migrations/
+├── users/                   # Utilisateurs + auth (Utilisateur, RoleUtilisateur)
+├── places/                  # Magasin, CentreCommercial (EmplacementMarche abstrait)
+├── catalog/                 # Produit, MediaProduit (état stock dérivé)
+│   # chaque app : models.py + services.py + schemas.py + admin.py + tests.py
 │
 ├── venv/                    # Environnement virtuel Python (non versionné)
 ├── db.sqlite3               # Base SQLite de dev (non versionnée)
@@ -201,7 +202,7 @@ Utilisateur.objects.vivants()  # → QuerySet des comptes non supprimés
 | Schéma | Usage |
 |---|---|
 | `RegisterIn` | Payload d'inscription (email, password, nom, prenom, telephone, role) |
-| `LoginIn` | Payload de connexion (email, password) |
+| `LoginIn` | Payload de connexion (`identifiant` = email **ou** téléphone, password) |
 | `RefreshIn` | Payload de refresh (refresh token) |
 | `UserOut` | Réponse publique (id, email, nom, prenom, role, dates…) |
 | `TokenOut` | Paire de tokens (access + refresh) |
@@ -239,13 +240,12 @@ D'après le [diagramme de classes](../conception.html) :
 
 | Module | Entités | Statut |
 |---|---|---|
-| `shared` | TimeStampedModel, SoftDeleteModel, CoordonneesMixin | ✅ Mixins de base |
+| `shared` | TimeStampedModel, SoftDeleteModel, CoordonneesMixin, ApiResponse | ✅ Mixins + enveloppe API |
 | `users` | Utilisateur, RoleUtilisateur | ✅ Modèle + Admin + Schemas |
-| `auth` | JWT (register, login, refresh, me) | ✅ Implémenté + testé |
-| `users` (suite) | Livreur, AdresseLivraison | ⬜ |
-| `places` | EmplacementMarché, Magasin, CentreCommercial | ⬜ |
-| `catalog` | Produit, MediaProduit, CategorieProduit | ⬜ |
-| `cart` | Panier, LignePanier | ⬜ |
+| `auth` | JWT (register, login email/tél, refresh, me) | ✅ Implémenté + testé (17) |
+| `places` | EmplacementMarché, Magasin, CentreCommercial | ✅ CRUD + validation + tests (15) |
+| `catalog` | Produit, MediaProduit, CategorieProduit, EtatStock | ✅ CRUD + médias + tests (11) |
+| **`cart`** | **Panier, LignePanier** | **🔨 Prochaine étape** |
 | `orders` | Commande, LigneCommande, HistoriqueVente | ⬜ |
 | `payments` | Paiement (Mobile Money, Espèces, Carte) | ⬜ |
 | `delivery` | Livraison, SuiviLivraison | ⬜ |
@@ -254,6 +254,25 @@ D'après le [diagramme de classes](../conception.html) :
 | `promotions` | Promotion | ⬜ |
 | `notifications` | Notification | ⬜ |
 | `moderation` | Signalement, ActionAdministrateur | ⬜ |
+| `users` (suite) | Livreur, AdresseLivraison | ⬜ |
+
+> **Total : 43 tests** verts (17 users + 15 places + 11 catalog).
+
+---
+
+## 🚧 Prochaine étape — module `cart`
+
+Premier consommateur direct du `Produit`. Maillon avant `orders` :
+
+```
+catalog(Produit) ✅ → cart(Panier, LignePanier) → orders → payments → delivery
+```
+
+- **`Panier`** : 1 par utilisateur, transitoire — `calculerTotal()`, `viderPanier()`.
+- **`LignePanier`** : `quantite` + FK `Produit`. **Prix LIVE** depuis le `Produit`
+  (pas de snapshot ; le figement n'intervient qu'à la commande).
+- Logique : ajout/modif/retrait de ligne, contrôle de stock disponible.
+- Même patron : fat models + services + router enveloppé + tests.
 
 ---
 
