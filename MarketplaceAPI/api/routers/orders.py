@@ -20,14 +20,14 @@ router = Router(tags=["orders"])
 def lister_adresses(request):
     adresses = services.lister_adresses(request.auth)
     return ApiResponse.success(
-        meta={"adresses": [AdresseLivraisonOut.from_orm(a) for a in adresses]},
+        meta={"adresses": [AdresseLivraisonOut.model_validate(a) for a in adresses]},
     )
 
 
 @router.post("/adresses", response={201: Envelope}, auth=JWTAuth())
 def creer_adresse(request, payload: AdresseLivraisonIn):
     adresse = services.creer_adresse(request.auth, payload.dict())
-    return ApiResponse.created(data=AdresseLivraisonOut.from_orm(adresse))
+    return ApiResponse.created(data=AdresseLivraisonOut.model_validate(adresse))
 
 
 @router.delete("/adresses/{adresse_id}", response={200: Envelope}, auth=JWTAuth())
@@ -43,7 +43,7 @@ def lister_commandes(request):
     commandes = services.lister_commandes(request.auth)
     return ApiResponse.success(
         meta={
-            "commandes": [CommandeOut.from_orm(c) for c in commandes]
+            "commandes": [CommandeOut.model_validate(c) for c in commandes]
         },
     )
 
@@ -51,14 +51,14 @@ def lister_commandes(request):
 @router.get("/commandes/{commande_id}", response={200: Envelope}, auth=JWTAuth())
 def obtenir_commande(request, commande_id: int):
     commande = services.obtenir_commande(request.auth, commande_id)
-    return ApiResponse.success(data=CommandeOut.from_orm(commande))
+    return ApiResponse.success(data=CommandeOut.model_validate(commande))
 
 
 @router.post("/commandes", response={201: Envelope}, auth=JWTAuth())
 def passer_commande(request, payload: CommandeCreateIn):
     commande = services.passer_commande(request.auth, payload.adresse_id)
     return ApiResponse.created(
-        data=CommandeOut.from_orm(commande),
+        data=CommandeOut.model_validate(commande),
         message="Commande créée.",
     )
 
@@ -67,6 +67,6 @@ def passer_commande(request, payload: CommandeCreateIn):
 def annuler_commande(request, commande_id: int):
     commande = services.annuler_commande(request.auth, commande_id)
     return ApiResponse.success(
-        data=CommandeOut.from_orm(commande),
+        data=CommandeOut.model_validate(commande),
         message="Commande annulée.",
     )

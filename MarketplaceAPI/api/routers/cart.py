@@ -21,20 +21,20 @@ def get_panier(request):
             nombre_articles=lignes.count(),
             date_creation=panier.date_creation,
         ),
-        meta={"articles": [LignePanierOut.from_orm(l) for l in lignes]},
+        meta={"articles": [LignePanierOut.model_validate(l) for l in lignes]},
     )
 
 
 @router.post("/panier/articles", response={201: Envelope}, auth=JWTAuth())
 def ajouter_article(request, payload: LignePanierIn):
     ligne = services.ajouter_ligne(request.auth, payload.produit_id, payload.quantite)
-    return ApiResponse.created(data=LignePanierOut.from_orm(ligne), message="Article ajouté.")
+    return ApiResponse.created(data=LignePanierOut.model_validate(ligne), message="Article ajouté.")
 
 
 @router.patch("/panier/articles/{ligne_id}", response={200: Envelope}, auth=JWTAuth())
 def modifier_article(request, ligne_id: int, payload: LignePanierUpdate):
     ligne = services.modifier_ligne(request.auth, ligne_id, payload.quantite)
-    return ApiResponse.success(data=LignePanierOut.from_orm(ligne), message="Quantité mise à jour.")
+    return ApiResponse.success(data=LignePanierOut.model_validate(ligne), message="Quantité mise à jour.")
 
 
 @router.delete("/panier/articles/{ligne_id}", response={200: Envelope}, auth=JWTAuth())

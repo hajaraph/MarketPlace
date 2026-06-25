@@ -5,6 +5,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
+from pydantic import field_validator
+
 from ninja import Schema
 
 
@@ -16,6 +18,8 @@ class AdresseLivraisonIn(Schema):
     complement: str = ""
     telephone: str
     est_par_defaut: bool = False
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class AdresseLivraisonOut(Schema):
@@ -27,6 +31,9 @@ class AdresseLivraisonOut(Schema):
     complement: str
     telephone: str
     est_par_defaut: bool
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    est_geolocalise: bool = False
     date_creation: datetime
 
 

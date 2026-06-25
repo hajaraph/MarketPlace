@@ -15,6 +15,7 @@ from django.db import models
 
 from catalog.models import Produit
 from places.models import Magasin
+from shared.gps import CoordonneesMixin
 from shared.models import SoftDeleteModel, SoftDeleteQuerySet, TimeStampedModel
 
 
@@ -27,7 +28,7 @@ class StatutCommande(models.TextChoices):
     ANNULEE = "ANNULEE", "Annulée"
 
 
-class AdresseLivraison(SoftDeleteModel):
+class AdresseLivraison(SoftDeleteModel, CoordonneesMixin):
     """Adresse réutilisable de l'utilisateur (plusieurs par utilisateur)."""
     objects = models.Manager.from_queryset(SoftDeleteQuerySet)()
 

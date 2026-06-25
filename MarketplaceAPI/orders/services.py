@@ -34,6 +34,8 @@ def creer_adresse(user, data: dict) -> AdresseLivraison:
         complement=data.get("complement", ""),
         telephone=data["telephone"],
         est_par_defaut=data.get("est_par_defaut", False),
+        latitude=data.get("latitude"),
+        longitude=data.get("longitude"),
     )
     return adresse
 

@@ -31,7 +31,7 @@ router = Router(tags=["auth"])
 def register(request, payload: RegisterIn):
     res = services.register(**payload.dict())
     data = AuthResponseOut(
-        user=UserOut.from_orm(res["user"]),
+        user=UserOut.model_validate(res["user"]),
         access=res["access"],
         refresh=res["refresh"],
     )
@@ -42,7 +42,7 @@ def register(request, payload: RegisterIn):
 def login(request, payload: LoginIn):
     res = services.login(identifiant=payload.identifiant, password=payload.password)
     data = AuthResponseOut(
-        user=UserOut.from_orm(res["user"]),
+        user=UserOut.model_validate(res["user"]),
         access=res["access"],
         refresh=res["refresh"],
     )
@@ -58,4 +58,4 @@ def refresh(request, payload: RefreshIn):
 
 @router.get("/me", response={200: Envelope}, auth=JWTAuth())
 def me(request):
-    return ApiResponse.success(data=UserOut.from_orm(request.auth))
+    return ApiResponse.success(data=UserOut.model_validate(request.auth))
